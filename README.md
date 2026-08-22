@@ -56,18 +56,56 @@ Powered by **Prisma ORM** with full relational integrity and foreign keys:
 
 ## 🚀 Getting Started
 
-### 1. Install Dependencies
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/rohit2005-s/Globetrotter_odoo.git
+cd Globetrotter_odoo
+```
+
+### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
-### 2. Initialize Database & Seed
+### 3. Configure Environment Variables
+
+Create your local `.env` file from the provided example.
+
+**Windows PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+The application uses the following environment variables:
+
+- `DATABASE_URL` – SQLite database connection
+- `JWT_SECRET` – secret used for JWT authentication
+- `NEXT_PUBLIC_APP_URL` – application base URL
+
+For local development, the default values in `.env.example` can be used.
+
+### 4. Initialize the Database
+
 ```bash
 npx prisma db push
+```
+
+### 5. Seed Demo Data
+
+```bash
 npx tsx prisma/seed.ts
 ```
 
-### 3. Run Development Server
+### 6. Run the Development Server
+
 ```bash
 npm run dev
 ```
