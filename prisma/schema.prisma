@@ -1,0 +1,164 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String
+  avatar            String?
+  bio               String?
+  homeCountry       String?            @default("United States")
+  currency          String             @default("USD")
+  language          String             @default("English")
+  role              String             @default("USER") // "USER" | "ADMIN"
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  trips             Trip[]
+  savedDestinations SavedDestination[]
+  tripLikes         TripLike[]
+}
+
+model Trip {
+  id          String      @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  coverImage  String?
+  startDate   DateTime
+  endDate     DateTime
+  totalBudget Float       @default(1500)
+  currency    String      @default("USD")
+  status      String      @default("UPCOMING") // "DRAFT" | "UPCOMING" | "ONGOING" | "COMPLETED"
+  isPublic    Boolean     @default(false)
+  shareToken  String      @unique @default(cuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops       Stop[]
+  expenses    Expense[]
+  likes       TripLike[]
+}
+
+model City {
+  id            String             @id @default(cuid())
+  name          String
+  country       String
+  region        String // "Europe", "Asia", "Americas", "Africa", "Oceania", "Middle East"
+  coverImage    String
+  description   String
+  costIndex     String             @default("MODERATE") // "BUDGET" | "MODERATE" | "LUXURY"
+  avgDailyCost  Float              @default(120)
+  rating        Float              @default(4.8)
+  popularSeason String             @default("Spring & Autumn")
+  currencyCode  String             @default("USD")
+  lat           Float              @default(0.0)
+  lng           Float              @default(0.0)
+  createdAt     DateTime           @default(now())
+
+  activities    Activity[]
+  stops         Stop[]
+  savedBy       SavedDestination[]
+}
+
+model Activity {
+  id            String         @id @default(cuid())
+  cityId        String
+  title         String
+  description   String
+  category      String // "SIGHTSEEING" | "FOOD" | "ADVENTURE" | "CULTURE" | "NIGHTLIFE" | "NATURE"
+  image         String
+  cost          Float          @default(25)
+  durationHours Float          @default(2.5)
+  rating        Float          @default(4.7)
+  location      String?
+  isPopular     Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+
+  city          City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  stopActivities StopActivity[]
+}
+
+model Stop {
+  id                String         @id @default(cuid())
+  tripId            String
+  cityId            String
+  orderIndex        Int            @default(0)
+  arrivalDate       DateTime
+  departureDate     DateTime
+  accommodationName String?
+  accommodationCost Float          @default(0)
+  notes             String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  trip              Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  city              City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  activities        StopActivity[]
+  expenses          Expense[]
+}
+
+model StopActivity {
+  id            String    @id @default(cuid())
+  stopId        String
+  activityId    String?
+  customTitle   String?
+  customCost    Float?
+  scheduledDate DateTime
+  timeSlot      String    @default("MORNING") // "MORNING" | "AFTERNOON" | "EVENING" | "NIGHT" | "CUSTOM"
+  customTime    String?
+  notes         String?
+  isCompleted   Boolean   @default(false)
+  orderIndex    Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  stop          Stop      @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  activity      Activity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  tripId    String
+  stopId    String?
+  title     String
+  category  String   @default("MISC") // "TRANSPORT" | "ACCOMMODATION" | "ACTIVITIES" | "FOOD" | "MISC"
+  amount    Float
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stop      Stop?    @relation(fields: [stopId], references: [id], onDelete: SetNull)
+}
+
+model SavedDestination {
+  id        String   @id @default(cuid())
+  userId    String
+  cityId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cityId])
+}
+
+model TripLike {
+  id        String   @id @default(cuid())
+  userId    String
+  tripId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tripId])
+}
